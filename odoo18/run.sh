@@ -38,10 +38,11 @@ check_port "$LIVE_CHAT_PORT"
 mkdir -p "$DOCKER_FOLDER"
 cd "$DOCKER_FOLDER"
 
-# Export variables for substitution
+# Export variables for substitution by envsubst
 export INSTANCE_NAME ODOO_PORT LIVE_CHAT_PORT ODOO_VERSION MASTER_PASSWORD
 
-# Generate docker-compose.yml using envsubst
+# Generate docker-compose.yml using envsubst.
+# Make sure "EOF" is at the start of the line with no spaces.
 cat <<EOF | envsubst > docker-compose.yml
 services:
   db-\${INSTANCE_NAME}:
@@ -73,21 +74,21 @@ services:
 EOF
 
 # Create required directories
-mkdir -p "addons_${ODOO_PORT}" config data "data_db_${ODOO_PORT}"
+mkdir -p addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
 
-# Adjust permissions so the container's "odoo" user (UID 999) can write to these folders
-sudo chown -R 999:999 "addons_${ODOO_PORT}" config data "data_db_${ODOO_PORT}"
+# Fix permissions so that the container's "odoo" user (UID 999) can write to them.
+sudo chown -R 999:999 addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
 
-# Generate a minimal Odoo configuration file if it doesn't exist
+# Generate a minimal Odoo configuration file if it doesn't exist.
 if [ ! -f config/odoo.conf ]; then
-  cat <<EOCONF > config/odoo.conf
+  cat <<EOC > config/odoo.conf
 [options]
 db_host = db-${INSTANCE_NAME}
 db_port = 5432
 db_user = odoo
 db_password = odoo
 addons_path = /mnt/extra-addons
-EOCONF
+EOC
 fi
 
 # Start containers using Docker Compose (v2 syntax)
