@@ -1,61 +1,184 @@
-# Odoo Docker Deployment with Custom Port Sequences and Addons
+# Odoo Multi-Version Docker Deployment
 
-This repository contains deployment scripts for multiple Odoo instances (versions 16, 17, and 18) using Docker and Docker Compose with unique port sequences and support for third-party addons.
+Deploy multiple Odoo instances (v16, v17, v18) with isolated environments using single-line commands.
+
+![Odoo Docker Deployment](https://img.shields.io/badge/Odoo-18.0-%23a347ff?logo=odoo&logoColor=white)
+![Docker Support](https://img.shields.io/badge/Docker-24.0+-%232496ED?logo=docker&logoColor=white)
 
 ## Features
 
-- **Custom Port Mapping:**
-  - **Odoo 18:**
-    - Instance 1: Odoo access on **1018**, Live Chat on **2018**
-    - Instance 2: Odoo access on **1118**, Live Chat on **2118**
-- **Odoo 17:**
-    - Instance 1: Odoo access on **1017**, Live Chat on **2017**
-    - Instance 2: Odoo access on **1117**, Live Chat on **2117**
-  - **Odoo 16:**
-    - Instance 1: Odoo access on **1016**, Live Chat on **2016**
-    - Instance 2: Odoo access on **1116**, Live Chat on **2116**
-
-- **Third‑Party Addons:**
-  - Each instance mounts its own addons folder (e.g., `addons_1017` for an instance using port 1017).
-  - Optionally, use the `docker-addons.yml` file to centralize addons configuration.
+- 🐳 One-command installation for any Odoo version
+- 🔒 Isolated instances with dedicated ports
+- 📦 Automatic addons directory creation
+- 🔄 Easy scaling for multiple instances
+- 🛡️ Persistent data storage
+- 🔧 Centralized addons configuration
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- odoo17 ├── run.sh # Deployment script for Odoo 17 └── addons_1017/ # Folder for third-party modules for the first instance /odoo18 ├── run.sh # Deployment script for Odoo 18 └── addons_1018/ # Folder for third-party modules for the first instance /odoo16 ├── run.sh # Deployment script for Odoo 16 └── addons_1016/ # Folder for third-party modules for the first instance /docker-addons.yml # (Optional) Docker addons configuration file README.md # This file
+- Linux/Unix system (recommended)
+- 4GB+ RAM (8GB recommended for multiple instances)
+- Docker 24.0+ and Docker Compose 2.20+
 
-## How to Deploy an Odoo Instance
+### Install Latest Docker & Docker Compose
 
-#1. **Clone this repository:**
+**For Ubuntu/Debian:**
+```bash
+# Remove old versions
+sudo apt-get remove docker docker-engine docker.io containerd runc
 
-   git clone https://github.com/webTronex/your_repo.git
-   cd your_repo/odoo17   # Change to odoo17, odoo18, or odoo16 as needed
-#Run the Deployment Script:
+# Install dependencies
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
 
-For example, to deploy the first Odoo 17 instance:
+# Add Docker's official GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-sudo bash run.sh odoo-one 1017 2017
-#To deploy the second Odoo 17 instance:
+# Set up repository
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-sudo bash run.sh erp-second 1117 2117
-#(Replace the port numbers as appropriate for Odoo 18 or Odoo 16.)
+# Install Docker
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-#Accessing the Instances:
-#Open your browser and navigate to http://localhost:1017 (or the appropriate host port) for Odoo access.
-#The live chat service is available on the corresponding live chat port (e.g., 2017).
+# Verify installation
+docker --version
+docker compose version
+```
 
-#Adding Third‑Party Modules:
-#Place your custom addons in the corresponding addons folder (e.g., addons_1017 for the instance running on port 1017).
-#The container mounts this folder at /mnt/extra-addons, making your third‑party modules available.
-#Using the Docker Addons File
-#If you wish to use the separate docker-addons.yml file, customize it to suit your environment and run Docker Compose with an override:
+**For CentOS/RHEL:**
+```bash
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
+## Quick Start
+
+### Odoo 16
+```bash
+# First instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo16/main/run.sh | sudo bash -s odoo-main 1016 2016
+
+# Additional instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo16/main/run.sh | sudo bash -s erp-aux 1116 2116
+```
+
+### Odoo 17
+```bash
+# First instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo17/main/run.sh | sudo bash -s odoo-main 1017 2017
+
+# Additional instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo17/main/run.sh | sudo bash -s erp-aux 1117 2117
+```
+
+### Odoo 18
+```bash
+# First instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo18/main/run.sh | sudo bash -s odoo-main 1018 2018
+
+# Additional instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo18/main/run.sh | sudo bash -s erp-aux 1118 2118
+```
+
+## Port Matrix
+
+| Version | Default Port Range | Example Instance        |
+|---------|--------------------|-------------------------|
+| 16      | 1016-1999          | `erp-legacy 1016 2016`  |
+| 17      | 1017-1999          | `main-erp 1017 2017`    |
+| 18      | 1018-1999          | `new-system 1018 2018`  |
+
+## Instance Management
+
+### Accessing Instances
+- **Web Interface:** `http://localhost:<YOUR_PORT>`
+- **Master Password:** `admin` (change in script if needed)
+
+### Adding Custom Modules
+1. Place your addons in `addons_<PORT_NUMBER>` directory
+2. Restart container: 
+```bash
+docker-compose restart
+```
+
+### Removing an Instance
+```bash
+docker-compose down -v
+rm -rf addons_* config data
+```
+
+## Advanced Configuration
+
+### Centralized Addons
+1. Edit `docker-addons.yml` in version directory
+2. Deploy with:
+```bash
 docker-compose -f docker-compose.yml -f docker-addons.yml up -d
-#Final Notes
-#Ensure the host ports you choose are not already in use.
-#Test the scripts in a staging environment before deploying to production.
-#Modify the scripts and configuration files as needed to suit your deployment requirements.
-#By following this guide and using the provided files, you’ll be able to deploy multiple Odoo instances with unique port configurations and separate addons directories for third‑party modules.
-#Happy deploying!
+```
+
+### Custom Master Password
+Edit the `MASTER_PASSWORD` variable in the run.sh script before execution.
+
+## Security Best Practices
+
+1. **Production Recommendations:**
+   - Change default master password immediately
+   - Enable HTTPS through reverse proxy (Nginx/Traefik)
+   - Implement regular backups
+   - Use firewall rules to restrict port access
+
+2. **Non-Root Execution:**
+```bash
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker  # Reload group permissions
+```
+
+## Troubleshooting
+
+**Port Conflicts:**
+```bash
+# Check used ports
+sudo lsof -i -P -n | grep LISTEN
+
+# Find process using a port
+sudo lsof -i :<PORT_NUMBER>
+```
+
+**Permission Issues:**
+```bash
+sudo chown -R $USER:$USER .
+docker system prune -a --volumes
+```
+
+**View Container Logs:**
+```bash
+docker-compose logs -f
+```
 
 ## Repository Structure
+```
+.
+├── odoo16/
+│   ├── run.sh
+│   └── docker-addons.yml
+├── odoo17/
+│   ├── run.sh
+│   └── docker-addons.yml
+├── odoo18/
+│   ├── run.sh
+│   └── docker-addons.yml
+└── README.md
+```
+
+## Support
+For issues and feature requests, please [open an issue](https://github.com/webTronex/odoo-docker/issues).
