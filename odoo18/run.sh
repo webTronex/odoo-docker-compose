@@ -68,4 +68,31 @@ services:
       - MASTER_PASSWORD=\${MASTER_PASSWORD}
     volumes:
       - ./addons_\${ODOO_PORT}:/mnt/extra-addons
-     
+      - ./config:/etc/odoo
+      - ./data:/var/lib/odoo
+EOF
+
+# Create required directories
+mkdir -p "addons_${ODOO_PORT}" config data "data_db_${ODOO_PORT}"
+
+# Adjust permissions so the container's "odoo" user (UID 999) can write to these folders
+sudo chown -R 999:999 "addons_${ODOO_PORT}" config data "data_db_${ODOO_PORT}"
+
+# Generate a minimal Odoo configuration file if it doesn't exist
+if [ ! -f config/odoo.conf ]; then
+  cat <<EOCONF > config/odoo.conf
+[options]
+db_host = db-${INSTANCE_NAME}
+db_port = 5432
+db_user = odoo
+db_password = odoo
+addons_path = /mnt/extra-addons
+EOCONF
+fi
+
+# Start containers using Docker Compose (v2 syntax)
+docker compose up -d
+
+echo "Odoo ${ODOO_VERSION} instance '${INSTANCE_NAME}' deployed in folder '${DOCKER_FOLDER}'!"
+echo "Access URL: http://localhost:${ODOO_PORT}"
+echo "Master Password: ${MASTER_PASSWORD}"
