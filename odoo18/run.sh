@@ -1,6 +1,6 @@
 #!/bin/bash
 # Odoo 18 Deployment Script with Postgres Database, custom folder for Docker files,
-# and auto-generation of a minimal config file to set DB parameters.
+# auto-generation of a minimal config file, and a command to fix permissions.
 #
 # Usage:
 #   curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s <instance_name> <ODOO_PORT> <LIVE_CHAT_PORT> <docker_folder>
@@ -70,6 +70,7 @@ services:
       - ./addons_\${ODOO_PORT}:/mnt/extra-addons
       - ./config:/etc/odoo
       - ./data:/var/lib/odoo
+    command: bash -c "chown -R odoo:odoo /var/lib/odoo && exec odoo"
 EOF
 
 # Create required directories
