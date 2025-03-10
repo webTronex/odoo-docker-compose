@@ -1,6 +1,6 @@
 #!/bin/bash
 # Odoo 17 Deployment Script with Postgres Database, custom folder for Docker files,
-# auto-generation of a minimal config file, and a command to fix permissions.
+# auto-generation of a minimal config file, and permission fix for host volumes.
 #
 # Usage:
 #   curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo17/run.sh | sudo bash -s <instance_name> <ODOO_PORT> <LIVE_CHAT_PORT> <docker_folder>
@@ -65,10 +65,11 @@ services:
       - ./addons_\${ODOO_PORT}:/mnt/extra-addons
       - ./config:/etc/odoo
       - ./data:/var/lib/odoo
-    command: bash -c "chown -R odoo:odoo /var/lib/odoo && exec odoo"
 EOF
 
 mkdir -p addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
+
+sudo chown -R 999:999 addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
 
 if [ ! -f config/odoo.conf ]; then
   cat > config/odoo.conf <<EOC
