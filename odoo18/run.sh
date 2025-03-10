@@ -1,6 +1,6 @@
 #!/bin/bash
 # Odoo 18 Deployment Script with Postgres Database, custom folder for Docker files,
-# auto-generation of a minimal config file, and a command to fix permissions.
+# auto-generation of a minimal config file, and permission fix for host volumes.
 #
 # Usage:
 #   curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s <instance_name> <ODOO_PORT> <LIVE_CHAT_PORT> <docker_folder>
@@ -68,29 +68,4 @@ services:
       - MASTER_PASSWORD=\${MASTER_PASSWORD}
     volumes:
       - ./addons_\${ODOO_PORT}:/mnt/extra-addons
-      - ./config:/etc/odoo
-      - ./data:/var/lib/odoo
-    command: bash -c "chown -R odoo:odoo /var/lib/odoo && exec odoo"
-EOF
-
-# Create required directories
-mkdir -p addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
-
-# Generate a minimal Odoo configuration file if it doesn't exist
-if [ ! -f config/odoo.conf ]; then
-  cat > config/odoo.conf <<EOC
-[options]
-db_host = db-${INSTANCE_NAME}
-db_port = 5432
-db_user = odoo
-db_password = odoo
-addons_path = /mnt/extra-addons
-EOC
-fi
-
-# Start containers using Docker Compose (v2 syntax)
-docker compose up -d
-
-echo "Odoo ${ODOO_VERSION} instance '${INSTANCE_NAME}' deployed in folder '${DOCKER_FOLDER}'!"
-echo "Access URL: http://localhost:${ODOO_PORT}"
-echo "Master Password: ${MASTER_PASSWORD}"
+     
