@@ -67,32 +67,34 @@ Each Odoo branch has its own folder and a deployment script that accepts four pa
 Odoo 16
 # First instance (using custom folder "my_odoo16_instance")
 curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo16/run.sh | sudo bash -s odoo-main 1016 2016 my_odoo16_instance
+
 # Additional instance (using custom folder "my_odoo16_aux")
 curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo16/run.sh | sudo bash -s erp-aux 1116 2116 my_odoo16_aux
 
 Odoo 17
 # First instance (using custom folder "my_odoo17_instance")
 curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo17/run.sh | sudo bash -s odoo-main 1017 2017 my_odoo17_instance
+
 # Additional instance (using custom folder "my_odoo17_aux")
 curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo17/run.sh | sudo bash -s erp-aux 1117 2117 my_odoo17_aux
 
 Odoo 18
 # First instance (using custom folder "my_odoo18_instance")
 curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s odoo-main 1018 2018 my_odoo18_instance
+
 # Additional instance (using custom folder "my_odoo18_aux")
 curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s erp-aux 1118 2118 my_odoo18_aux
 
 Port Matrix
 Version	Default Port Range	Example Instance
-16-	1016-1999	erp-legacy 1016 2016
-17-	1017-1999	main-erp 1017 2017
-18-	1018-1999	new-system 1018 2018
+16	1016-1999	erp-legacy 1016 2016
+17	1017-1999	main-erp 1017 2017
+18	1018-1999	new-system 1018 2018
 
 Instance Management
 Accessing Instances
-Web Interface: http://localhost:<YOUR_PORT>
-Master Password: admin (change in script if needed)
-
+-Web Interface: http://localhost:<YOUR_PORT>
+-Master Password: admin (change in script if needed)
 Adding Custom Modules
 1-Place your addons in the directory named addons_<PORT_NUMBER> inside the instance folder.
 2-Restart the container:
@@ -133,6 +135,8 @@ sudo lsof -i :<PORT_NUMBER>
 2-Permission Issues:
 sudo chown -R \$USER:\$USER .
 docker system prune -a --volumes
+3-View Container Logs:
+docker compose logs -f
 
 Repository Structure
 .
@@ -149,6 +153,7 @@ Repository Structure
 
 Support
 For issues and feature requests, please open an issue.
+https://github.com/webTronex/odoo-docker/issues
 
 ---
 
@@ -166,10 +171,10 @@ How to Use These Files
 1-Repository Setup:
 Organize your repository as shown in the structure above. Each Odoo version folder (odoo16, odoo17, odoo18) should contain its own run.sh and docker-addons.yml.
 2-Deploy an Instance:
-Use the provided curl commands (with the updated URLs) for each version, passing your desired folder name as the fourth parameter. For example, to deploy an Odoo 18 instance:
+Use the provided curl commands for each version, passing your desired folder name as the fourth parameter. For example, to deploy an Odoo 18 instance:
 curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s odoo-main 1018 2018 my_odoo18_instance
 3-(Optional) Use Centralized Addons:
 Edit the docker-addons.yml file if you need to change the centralized addons directory path. Then deploy using:
 docker compose -f docker-compose.yml -f docker-addons.yml up -d
-4-Install Docker & Docker Compose as shown above if not already installed.
+
 Happy deploying!
