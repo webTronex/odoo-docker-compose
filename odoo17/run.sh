@@ -1,44 +1,58 @@
 #!/bin/bash
-# run.sh for Odoo 17 instance deployment with custom port mapping
-# Usage: sudo bash run.sh <instance_name> <ODOO_ACCESS_PORT> <LIVE_CHAT_PORT>
-#
-# For instance 1 (Odoo 17): use: sudo bash run.sh odoo-one 1017 2017
-# For instance 2 (Odoo 17): use: sudo bash run.sh erp-second 1117 2117
+# Odoo 17 Deployment Script
+# Usage: curl -s https://raw.githubusercontent.com/<your-repo>/odoo17/run.sh | sudo bash -s <instance_name> <ODOO_PORT> <LIVE_CHAT_PORT>
 
+set -e  # Exit on error
+
+# Validate arguments
 if [ "$#" -ne 3 ]; then
-    echo "Usage: sudo bash run.sh <instance_name> <ODOO_ACCESS_PORT> <LIVE_CHAT_PORT>"
+    echo "Usage: $0 <instance_name> <ODOO_PORT> <LIVE_CHAT_PORT>"
+    echo "Example: $0 odoo-main 1017 2017"
     exit 1
 fi
 
 INSTANCE_NAME=$1
-ODOO_ACCESS_PORT=$2
+ODOO_PORT=$2
 LIVE_CHAT_PORT=$3
+ODOO_VERSION="17.0"
+MASTER_PASSWORD="admin"  # Change default as needed
 
-echo "Deploying Odoo 17 instance: $INSTANCE_NAME"
-echo "Odoo Access Host Port: $ODOO_ACCESS_PORT"
-echo "Live Chat Host Port: $LIVE_CHAT_PORT"
+# Check port availability
+check_port() {
+    if lsof -i :$1 >/dev/null ; then
+        echo "Port $1 is already in use! Choose different ports."
+        exit 1
+    fi
+}
 
-# Create a docker-compose.yml file dynamically
+check_port $ODOO_PORT
+check_port $LIVE_CHAT_PORT
+
+# Generate docker-compose.yml
 cat > docker-compose.yml <<EOF
 version: '3'
 services:
-  odoo:
-    image: odoo:17.0
+  odoo-$INSTANCE_NAME:
+    image: odoo:$ODOO_VERSION
     ports:
-      - "$ODOO_ACCESS_PORT:8069"   # Maps host port (e.g., 1017 or 1117) to container’s Odoo port
-      - "$LIVE_CHAT_PORT:8072"      # Maps host port (e.g., 2017 or 2117) to container’s live chat port
+      - "$ODOO_PORT:8069"
+      - "$LIVE_CHAT_PORT:8072"
     environment:
-      - INSTANCE_NAME=$INSTANCE_NAME
+      - HOST=localhost
+      - USER=odoo
+      - PASSWORD=$MASTER_PASSWORD
     volumes:
-      - ./addons_${ODOO_ACCESS_PORT}:/mnt/extra-addons
+      - ./addons_$ODOO_PORT:/mnt/extra-addons
+      - ./config:/etc/odoo
+      - ./data:/var/lib/odoo
 EOF
 
-# Create the addons directory for this instance if it doesn't exist
-mkdir -p addons_${ODOO_ACCESS_PORT}
+# Create required directories
+mkdir -p {addons_$ODOO_PORT,config,data}
 
-echo "Starting Odoo 17 instance..."
+# Start container
 docker-compose up -d
 
-echo "Odoo 17 instance '$INSTANCE_NAME' deployed with:"
-echo "  - Odoo access on port: $ODOO_ACCESS_PORT"
-echo "  - Live chat on port: $LIVE_CHAT_PORT"
+echo "Odoo $ODOO_VERSION instance '$INSTANCE_NAME' deployed!"
+echo "Access URL: http://localhost:$ODOO_PORT"
+echo "Master Password: $MASTER_PASSWORD"
