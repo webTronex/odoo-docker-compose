@@ -49,11 +49,8 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 # Verify installation
 docker --version
 docker compose version
-For CentOS/RHEL:
 
-bash
-Copy
-Edit
+For CentOS/RHEL:
 sudo yum install -y yum-utils
 sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
@@ -67,32 +64,23 @@ ODOO_PORT (host port for Odoo web access)
 LIVE_CHAT_PORT (host port for live chat service)
 docker_folder (custom folder name for the instance)
 Odoo 16
-bash
-Copy
-Edit
 # First instance (using custom folder "my_odoo16_instance")
-curl -s https://raw.githubusercontent.com/webTronex/odoo16/main/run.sh | sudo bash -s odoo-main 1016 2016 my_odoo16_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo16/run.sh | sudo bash -s odoo-main 1016 2016 my_odoo16_instance
 
 # Additional instance (using custom folder "my_odoo16_aux")
-curl -s https://raw.githubusercontent.com/webTronex/odoo16/main/run.sh | sudo bash -s erp-aux 1116 2116 my_odoo16_aux
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo16/run.sh | sudo bash -s erp-aux 1116 2116 my_odoo16_aux
 Odoo 17
-bash
-Copy
-Edit
 # First instance (using custom folder "my_odoo17_instance")
-curl -s https://raw.githubusercontent.com/webTronex/odoo17/main/run.sh | sudo bash -s odoo-main 1017 2017 my_odoo17_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo17/run.sh | sudo bash -s odoo-main 1017 2017 my_odoo17_instance
 
 # Additional instance (using custom folder "my_odoo17_aux")
-curl -s https://raw.githubusercontent.com/webTronex/odoo17/main/run.sh | sudo bash -s erp-aux 1117 2117 my_odoo17_aux
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo17/run.sh | sudo bash -s erp-aux 1117 2117 my_odoo17_aux
 Odoo 18
-bash
-Copy
-Edit
 # First instance (using custom folder "my_odoo18_instance")
-curl -s https://raw.githubusercontent.com/webTronex/odoo18/main/run.sh | sudo bash -s odoo-main 1018 2018 my_odoo18_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s odoo-main 1018 2018 my_odoo18_instance
 
 # Additional instance (using custom folder "my_odoo18_aux")
-curl -s https://raw.githubusercontent.com/webTronex/odoo18/main/run.sh | sudo bash -s erp-aux 1118 2118 my_odoo18_aux
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s erp-aux 1118 2118 my_odoo18_aux
 Port Matrix
 Version	Default Port Range	Example Instance
 16	1016-1999	erp-legacy 1016 2016
@@ -105,16 +93,10 @@ Master Password: admin (change in script if needed)
 Adding Custom Modules
 Place your addons in the directory named addons_<PORT_NUMBER> inside the instance folder.
 Restart the container:
-bash
-Copy
-Edit
 docker compose restart
 Removing an Instance
 Inside the instance folder, run:
 
-bash
-Copy
-Edit
 docker compose down -v
 rm -rf addons_* config data data_db_*
 Advanced Configuration
@@ -123,9 +105,6 @@ To use a centralized addons configuration across all instances:
 
 Edit the docker-addons.yml file in each Odoo branch directory.
 Deploy with:
-bash
-Copy
-Edit
 docker compose -f docker-compose.yml -f docker-addons.yml up -d
 Custom Master Password
 Edit the MASTER_PASSWORD variable in the respective run.sh script before execution.
@@ -139,18 +118,12 @@ Implement regular backups
 Use firewall rules to restrict port access
 Non-Root Execution:
 
-bash
-Copy
-Edit
 sudo groupadd docker
 sudo usermod -aG docker $USER
 newgrp docker  # Reload group permissions
 Troubleshooting
 Port Conflicts:
 
-bash
-Copy
-Edit
 # Check used ports
 sudo lsof -i -P -n | grep LISTEN
 
@@ -158,21 +131,13 @@ sudo lsof -i -P -n | grep LISTEN
 sudo lsof -i :<PORT_NUMBER>
 Permission Issues:
 
-bash
-Copy
-Edit
 sudo chown -R $USER:$USER .
 docker system prune -a --volumes
 View Container Logs:
 
-bash
-Copy
-Edit
 docker compose logs -f
 Repository Structure
 arduino
-Copy
-Edit
 .
 ├── odoo16/
 │   ├── run.sh
@@ -184,18 +149,15 @@ Edit
 │   ├── run.sh
 │   └── docker-addons.yml
 └── README.md
+
 Support
 For issues and feature requests, please open an issue.
-
-yaml
-Copy
-Edit
 
 ---
 
 ### docker-addons.yml
 
-This file is the same for each Odoo branch. It provides a centralized addons configuration that you can use by mounting a shared addons directory into the Odoo container. Edit as needed.
+This file is identical for each Odoo branch. It provides a centralized addons configuration that you can use by mounting a shared addons directory into the Odoo container. Adjust as needed.
 
 ```yaml
 version: '3'
@@ -205,24 +167,16 @@ services:
       # Centralized addons folder for all instances (optional)
       - ./central_addons:/mnt/central-addons
 How to Use These Files
-Clone the Repository:
+Repository Setup:
+Organize your repository as shown in the structure above. Each Odoo version folder (odoo16, odoo17, odoo18) should contain its own run.sh and docker-addons.yml.
 
-Make sure your repository is structured as shown in the Repository Structure above.
-Each Odoo version folder (odoo16, odoo17, odoo18) contains its own run.sh and docker-addons.yml.
 Deploy an Instance:
+Use the provided curl commands (with the updated URLs) for each version, passing your desired folder name as the fourth parameter. For example, to deploy an Odoo 18 instance:
 
-Use the provided curl commands in the README for each version, remembering to pass your desired folder name as the fourth parameter. For example:
-bash
-Copy
-Edit
-curl -s https://raw.githubusercontent.com/webTronex/odoo18/main/run.sh | sudo bash -s odoo-main 1018 2018 my_odoo18_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s odoo-main 1018 2018 my_odoo18_instance
 (Optional) Use Centralized Addons:
+Edit the docker-addons.yml file if you need to change the centralized addons directory path. Then deploy using:
 
-Edit the docker-addons.yml file if you need to change the centralized addons directory path.
-Deploy using both files:
-bash
-Copy
-Edit
 docker compose -f docker-compose.yml -f docker-addons.yml up -d
 Install Docker & Docker Compose as shown above if not already installed.
 
