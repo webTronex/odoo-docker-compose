@@ -1,6 +1,7 @@
 #!/bin/bash
 # Odoo 18 Deployment Script with Postgres Database, custom folder for Docker files,
-# auto-generation of a minimal config file, and permission fix for host volumes.
+# auto-generation of a minimal config file (with session_dir override),
+# and permission fixes for host volumes.
 #
 # Usage:
 #   curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s <instance_name> <ODOO_PORT> <LIVE_CHAT_PORT> <docker_folder>
@@ -42,7 +43,6 @@ cd "$DOCKER_FOLDER"
 export INSTANCE_NAME ODOO_PORT LIVE_CHAT_PORT ODOO_VERSION MASTER_PASSWORD
 
 # Generate docker-compose.yml using envsubst.
-# Make sure "EOF" is at the start of the line with no spaces.
 cat <<EOF | envsubst > docker-compose.yml
 services:
   db-\${INSTANCE_NAME}:
@@ -75,11 +75,14 @@ EOF
 
 # Create required directories
 mkdir -p addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
+# Also create a directory for Odoo sessions inside the "data" folder
+mkdir -p data/session
 
-# Fix permissions so that the container's "odoo" user (UID 999) can write to them.
-sudo chown -R 999:999 addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
+# Fix permissions so that the container's "odoo" user (UID 999) can write to these folders.
+sudo chown -R 999:999 addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT" data/session
 
 # Generate a minimal Odoo configuration file if it doesn't exist.
+# We override the session_dir so that Odoo uses /var/lib/odoo/session (mounted from data/session).
 if [ ! -f config/odoo.conf ]; then
   cat <<EOC > config/odoo.conf
 [options]
@@ -88,6 +91,7 @@ db_port = 5432
 db_user = odoo
 db_password = odoo
 addons_path = /mnt/extra-addons
+session_dir = /var/lib/odoo/session
 EOC
 fi
 
