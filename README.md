@@ -5,12 +5,12 @@ This repository contains deployment scripts for multiple Odoo instances (version
 ## Features
 
 - **Custom Port Mapping:**
-  - **Odoo 17:**
-    - Instance 1: Odoo access on **1017**, Live Chat on **2017**
-    - Instance 2: Odoo access on **1117**, Live Chat on **2117**
   - **Odoo 18:**
     - Instance 1: Odoo access on **1018**, Live Chat on **2018**
     - Instance 2: Odoo access on **1118**, Live Chat on **2118**
+- **Odoo 17:**
+    - Instance 1: Odoo access on **1017**, Live Chat on **2017**
+    - Instance 2: Odoo access on **1117**, Live Chat on **2117**
   - **Odoo 16:**
     - Instance 1: Odoo access on **1016**, Live Chat on **2016**
     - Instance 2: Odoo access on **1116**, Live Chat on **2116**
