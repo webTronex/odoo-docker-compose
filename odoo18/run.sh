@@ -1,8 +1,10 @@
 #!/bin/bash
-# Odoo 18 Deployment Script with Postgres Database and custom folder for Docker files
-# Usage: 
+# Odoo 18 Deployment Script with Postgres Database, custom folder for Docker files,
+# and auto-generation of a minimal config file to set DB parameters.
+#
+# Usage:
 #   curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s <instance_name> <ODOO_PORT> <LIVE_CHAT_PORT> <docker_folder>
-# Example: 
+# Example:
 #   sudo bash run.sh odoo-main 1018 2018 my_odoo18_instance
 
 set -e
@@ -39,7 +41,7 @@ cd "$DOCKER_FOLDER"
 # Export variables for substitution
 export INSTANCE_NAME ODOO_PORT LIVE_CHAT_PORT ODOO_VERSION MASTER_PASSWORD
 
-# Generate docker-compose.yml using envsubst to substitute all variables
+# Generate docker-compose.yml using envsubst
 cat <<EOF | envsubst > docker-compose.yml
 services:
   db-\${INSTANCE_NAME}:
@@ -70,8 +72,20 @@ services:
       - ./data:/var/lib/odoo
 EOF
 
-# Create required directories inside the custom folder
+# Create required directories
 mkdir -p addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
+
+# Generate a minimal Odoo configuration file if it doesn't exist
+if [ ! -f config/odoo.conf ]; then
+  cat > config/odoo.conf <<EOC
+[options]
+db_host = db-${INSTANCE_NAME}
+db_port = 5432
+db_user = odoo
+db_password = odoo
+addons_path = /mnt/extra-addons
+EOC
+fi
 
 # Start containers using Docker Compose (v2 syntax)
 docker compose up -d
