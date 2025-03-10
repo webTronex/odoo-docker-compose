@@ -1,7 +1,0 @@
-version: '3'
-services:
-  odoo:
-    volumes:
-      # This assumes you have a central folder with addons; you could also
-      # modify this to use a dynamic folder based on the instance.
-      - ./custom_addons:/mnt/extra-addons
