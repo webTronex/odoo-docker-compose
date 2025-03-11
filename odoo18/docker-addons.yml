@@ -1,5 +1,0 @@
-services:
-  odoo:
-    volumes:
-      # Centralized addons folder for all instances
-      - ./central_addons:/mnt/central-addons
