@@ -1,6 +1,11 @@
-version: '3'
 services:
   odoo:
+    image: odoo:18.0
     volumes:
-      # Centralized addons folder for all instances
       - ./central_addons:/mnt/central-addons
+    networks:
+      - odoo-net
+
+networks:
+  odoo-net:
+    driver: bridge
