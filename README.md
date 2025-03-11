@@ -22,40 +22,53 @@ One-command deployment system for Odoo 16, 17, and 18 with Docker.
 ### Install Docker & Docker Compose
 #### For Ubuntu/Debian:
 ```bash
-# Remove old versions
+# Remove old versions of Docker
 sudo apt-get remove docker docker-engine docker.io containerd runc
 
 # Install dependencies
 sudo apt-get update
-sudo apt-get install ca-certificates curl gnupg
+sudo apt-get install -y ca-certificates curl gnupg lsb-release
 
 # Add Docker's official GPG key
-sudo install -m 0755 -d /etc/apt/keyrings
+sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-# Set up repository
+# Set up the Docker repository
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# Install Docker
+# Install Docker Engine, CLI, and Compose Plugin
 sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Verify installation
+# Verify Docker installation
 docker --version
 docker compose version
 ```
 
 #### For CentOS/RHEL:
 ```bash
+# Remove old versions of Docker
+sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine
+
+# Install required packages
 sudo yum install -y yum-utils
+
+# Add Docker repository
 sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Install Docker Engine, CLI, and Compose Plugin
+sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Start and enable Docker service
 sudo systemctl start docker
 sudo systemctl enable docker
+
+# Verify Docker installation
+docker --version
+docker compose version
 ```
 
 ## Quick Start
@@ -139,6 +152,10 @@ sudo rm -rf addons config data postgres_data
   ```bash
   docker compose logs -f
   ```
+Error Handling:
+If users encounter issues with docker compose, they can fall back to installing the standalone docker-compose binary using pip:
+sudo apt-get install python3-pip
+pip3 install docker-compose
 
 ## Repository Structure
 ```
