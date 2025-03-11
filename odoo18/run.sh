@@ -1,14 +1,12 @@
 #!/bin/bash
-# Odoo 18 Deployment Script with Postgres Database, custom folder for Docker files,
-# auto-generation of a minimal config file (with session_dir override),
-# and permission fixes for host volumes.
-#
+# Odoo 18 Deployment Script with Postgres Database
+# Features: Auto-configuration, permission fixes, and folder isolation
 # Usage:
 #   curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/main/odoo18/run.sh | sudo bash -s <instance_name> <ODOO_PORT> <LIVE_CHAT_PORT> <docker_folder>
 # Example:
 #   sudo bash run.sh odoo-main 1018 2018 my_odoo18_instance
 
-set -e
+set -eo pipefail
 
 # Validate arguments
 if [ "$#" -ne 4 ]; then
@@ -17,17 +15,24 @@ if [ "$#" -ne 4 ]; then
     exit 1
 fi
 
+# Configuration
 INSTANCE_NAME="$1"
 ODOO_PORT="$2"
 LIVE_CHAT_PORT="$3"
 DOCKER_FOLDER="$4"
 ODOO_VERSION="18.0"
-MASTER_PASSWORD="admin"  # Change default as needed
+MASTER_PASSWORD="admin"  # Change default before production use
+ODOO_UID="101"           # Verified UID for Odoo container user
+POSTGRES_UID="999"       # Verified UID for Postgres container user
 
-# Function to check port availability
+# Dependency checks
+command -v docker >/dev/null 2>&1 || { echo >&2 "Docker required. Install docker first."; exit 1; }
+command -v lsof >/dev/null 2>&1 || { echo >&2 "lsof required. Install lsof (apt-get install lsof)."; exit 1; }
+
+# Port validation
 check_port() {
     if lsof -i :"$1" >/dev/null ; then
-        echo "Port $1 is already in use! Choose different ports."
+        echo "ERROR: Port $1 already in use!"
         exit 1
     fi
 }
@@ -35,69 +40,79 @@ check_port() {
 check_port "$ODOO_PORT"
 check_port "$LIVE_CHAT_PORT"
 
-# Create and switch to the custom folder
+# Folder setup
 mkdir -p "$DOCKER_FOLDER"
 cd "$DOCKER_FOLDER"
 
-# Export variables for substitution by envsubst
-export INSTANCE_NAME ODOO_PORT LIVE_CHAT_PORT ODOO_VERSION MASTER_PASSWORD
+# Generate docker-compose.yml
+cat > docker-compose.yml <<EOF
+version: '3.8'
 
-# Generate docker-compose.yml using envsubst.
-cat <<EOF | envsubst > docker-compose.yml
 services:
-  db-\${INSTANCE_NAME}:
+  db-${INSTANCE_NAME}:
     image: postgres:14
+    user: "${POSTGRES_UID}"
     environment:
-      - POSTGRES_USER=odoo
-      - POSTGRES_PASSWORD=odoo
-      - POSTGRES_DB=postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_DB: postgres
     volumes:
-      - ./data_db_\${ODOO_PORT}:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - odoo-net
 
-  odoo-\${INSTANCE_NAME}:
-    image: odoo:\${ODOO_VERSION}
+  odoo-${INSTANCE_NAME}:
+    image: odoo:${ODOO_VERSION}
+    user: "${ODOO_UID}"
     depends_on:
-      - db-\${INSTANCE_NAME}
+      - db-${INSTANCE_NAME}
     ports:
-      - "\${ODOO_PORT}:8069"
-      - "\${LIVE_CHAT_PORT}:8072"
+      - "${ODOO_PORT}:8069"
+      - "${LIVE_CHAT_PORT}:8072"
     environment:
-      - DB_HOST=db-\${INSTANCE_NAME}
-      - DB_PORT=5432
-      - DB_USER=odoo
-      - DB_PASSWORD=odoo
-      - MASTER_PASSWORD=\${MASTER_PASSWORD}
+      HOST: db-${INSTANCE_NAME}
+      USER: odoo
+      PASSWORD: ${MASTER_PASSWORD}
     volumes:
-      - ./addons_\${ODOO_PORT}:/mnt/extra-addons
+      - ./addons:/mnt/extra-addons
       - ./config:/etc/odoo
       - ./data:/var/lib/odoo
+    networks:
+      - odoo-net
+
+networks:
+  odoo-net:
+    driver: bridge
 EOF
 
-# Create required directories
-mkdir -p addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT"
-# Also create a directory for Odoo sessions inside the "data" folder
-mkdir -p data/session
+# Create directories with correct permissions
+mkdir -p {addons,config,data/postgres_data,data/session}
 
-# Fix permissions so that the container's "odoo" user (UID 999) can write to these folders.
-sudo chown -R 999:999 addons_"$ODOO_PORT" config data data_db_"$ODOO_PORT" data/session
+# Set permissions
+sudo chown -R "${ODOO_UID}:${ODOO_UID}" addons config data
+sudo chown -R "${POSTGRES_UID}:${POSTGRES_UID}" data/postgres_data
+sudo chmod -R 755 addons config data
 
-# Generate a minimal Odoo configuration file if it doesn't exist.
-# We override the session_dir so that Odoo uses /var/lib/odoo/session (mounted from data/session).
+# Generate default configuration
 if [ ! -f config/odoo.conf ]; then
-  cat <<EOC > config/odoo.conf
+  cat > config/odoo.conf <<EOC
 [options]
 db_host = db-${INSTANCE_NAME}
 db_port = 5432
 db_user = odoo
 db_password = odoo
 addons_path = /mnt/extra-addons
+data_dir = /var/lib/odoo/data
 session_dir = /var/lib/odoo/session
 EOC
 fi
 
-# Start containers using Docker Compose (v2 syntax)
-docker compose up -d
+# Deploy stack
+docker compose up -d --pull always
 
-echo "Odoo ${ODOO_VERSION} instance '${INSTANCE_NAME}' deployed in folder '${DOCKER_FOLDER}'!"
-echo "Access URL: http://localhost:${ODOO_PORT}"
-echo "Master Password: ${MASTER_PASSWORD}"
+# Verification
+echo -e "\n\e[1;32mDeployment Successful!\e[0m"
+echo -e "Access URL: \e[4mhttp://localhost:${ODOO_PORT}\e[0m"
+echo -e "Master Password: \e[1;33m${MASTER_PASSWORD}\e[0m"
+echo -e "Data Directory: \e[1;34m${PWD}/data\e[0m"
+echo -e "To stop: \e[35mcd ${PWD} && docker compose down\e[0m\n"
