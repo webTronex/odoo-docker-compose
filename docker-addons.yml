@@ -1,0 +1,5 @@
+version: '3.8'
+services:
+  odoo:
+    volumes:
+      - ./central_addons:/mnt/central-addons
