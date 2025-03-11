@@ -1,7 +1,9 @@
 # Odoo Docker Deployment Suite
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Odoo Versions](https://img.shields.io/badge/Odoo-16%20%7C%2017%20%7C%2018-%23a347ff?logo=odoo&logoColor=white)]()
+[![Docker](https://img.shields.io/badge/Docker-24.0+-%232496ED?logo=docker&logoColor=white)]()
 
-One-command deployment system for Odoo 16, 17, and 18 with Docker
+One-command deployment system for Odoo 16, 17, and 18 with Docker.
 
 ## Features
 ✅ Single script for all Odoo versions (16/17/18)  
@@ -12,44 +14,85 @@ One-command deployment system for Odoo 16, 17, and 18 with Docker
 ✅ Easy multi-instance deployment  
 
 ## Requirements
-1. Docker Engine 20.10+
-2. Docker Compose V2
+1. **Docker Engine** 20.10+ ([Install Docker](https://docs.docker.com/get-docker/))
+2. **Docker Compose** V2 ([Install Compose](https://docs.docker.com/compose/install/))
 3. Linux/macOS environment
 4. `lsof` utility (for port checking)
 
+### Install Docker & Docker Compose
+#### For Ubuntu/Debian:
+```bash
+# Remove old versions
+sudo apt-get remove docker docker-engine docker.io containerd runc
+
+# Install dependencies
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+
+# Add Docker's official GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Set up repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Verify installation
+docker --version
+docker compose version
+```
+
+#### For CentOS/RHEL:
+```bash
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+
 ## Quick Start
+Each command deploys an isolated Odoo instance with dedicated ports and folders.
+
 ### Deploy Odoo 18
 ```bash
-curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/08d9a17b8c964b58a8580d478a14b58e2f2061a6/odoo/run.sh | sudo bash -s 18 odoo18 10018 20018 odoo18_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 18 odoo-main 1018 2018 my_odoo18_instance
 ```
 
 ### Deploy Odoo 17
 ```bash
-curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/08d9a17b8c964b58a8580d478a14b58e2f2061a6/odoo/run.sh | sudo bash -s 17 odoo17 10017 20017 odoo17_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 17 odoo-main 1017 2017 my_odoo17_instance
 ```
 
 ### Deploy Odoo 16
 ```bash
-curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/08d9a17b8c964b58a8580d478a14b58e2f2061a6/odoo/run.sh | sudo bash -s 16 odoo16 10016 20016 odoo16_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 16 odoo-main 1016 2016 my_odoo16_instance
 ```
 
 ## Centralized Addons
-To share addons between instances:
+To share addons between instances, use the `--addons` flag during deployment:
 ```bash
-# Add --addons flag during deployment
-curl -s ... | sudo bash -s 18 odoo18 10018 20018 odoo18_instance --addons
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 18 odoo-main 1018 2018 my_odoo18_instance --addons
 ```
 
 ## Customization
-1. **Ports**: Change the 1001X/2001X numbers in commands
+1. **Ports**: Change the `10XX` and `20XX` numbers in commands to avoid conflicts.
 2. **Master Password**: 
    ```bash
    export MASTER_PASSWORD="your_secure_password"
    curl ... | sudo -E bash -s ...
    ```
-3. **Addons Path**: Add custom paths in `docker-addons.yml`
+3. **Addons Path**: Modify `docker-addons.yml` for custom paths.
 
 ## Directory Structure
+After deployment, each instance folder will have the following structure:
 ```
 your_instance_folder/
 ├── addons/          # Custom Odoo addons
@@ -60,24 +103,65 @@ your_instance_folder/
 ```
 
 ## Stopping Instances
+To stop and remove an instance:
 ```bash
 cd your_instance_folder
 sudo docker compose down
 ```
 
+To remove all associated data:
+```bash
+sudo rm -rf addons config data postgres_data
+```
+
 ## Security
 ⚠️ Before production use:
-1. Change `MASTER_PASSWORD` in deployment command
-2. Restrict database access
-3. Configure HTTPS
-4. Set appropriate file permissions
+1. Change `MASTER_PASSWORD` in the deployment command.
+2. Restrict database access by configuring firewall rules.
+3. Configure HTTPS using a reverse proxy like Nginx or Traefik.
+4. Set appropriate file permissions:
+   ```bash
+   sudo chown -R 101:101 addons config data
+   sudo chown -R 999:999 postgres_data
+   ```
 
 ## Troubleshooting
-- Port conflicts: Use `sudo lsof -i :<port>` to identify blocking processes
-- Permission issues: `sudo chown -R 101:101 addons config data`
-- Database errors: Check container logs with `docker compose logs -f`
+- **Port Conflicts**: Identify blocking processes:
+  ```bash
+  sudo lsof -i :<port>
+  ```
+- **Permission Issues**: Fix permissions:
+  ```bash
+  sudo chown -R 101:101 addons config data
+  sudo chown -R 999:999 postgres_data
+  ```
+- **Database Errors**: Check container logs:
+  ```bash
+  docker compose logs -f
+  ```
+
+## Repository Structure
+```
+.
+├── docker-addons.yml
+├── run.sh
+└── README.md
+```
 
 ## Support
-[Create GitHub Issue](https://github.com/webTronex/odoo-docker-compose/issues)  
-[Documentation](https://github.com/webTronex/odoo-docker-compose/wiki)  
+For issues and feature requests, please open an issue:
+- [Create GitHub Issue](https://github.com/webTronex/odoo-docker-compose/issues)
+- [Documentation](https://github.com/webTronex/odoo-docker-compose/wiki)
+
+---
+
+### How to Use These Files
+1. **Repository Setup**: Ensure your repository matches the structure above.
+2. **Deploy an Instance**: Use the provided `curl` commands for each version.
+3. **Centralized Addons**: Edit `docker-addons.yml` if needed and deploy with:
+   ```bash
+   docker compose -f docker-compose.yml -f docker-addons.yml up -d
+   ```
+
+Happy deploying! 🚀
 ```
