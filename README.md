@@ -86,7 +86,7 @@ curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc
 
 ### Deploy Odoo 16
 ```bash
-curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 16 odoo-main 1016 2016 my_odoo16_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 16 odoo-main 10016 20016 my_odoo16_instance
 ```
 
 ## Centralized Addons
