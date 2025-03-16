@@ -76,12 +76,12 @@ Each command deploys an isolated Odoo instance with dedicated ports and folders.
 
 ### Deploy Odoo 18
 ```bash
-curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 18 odoo-main 1018 2018 my_odoo18_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 18 odoo-main 10018 20018 my_odoo18_instance
 ```
 
 ### Deploy Odoo 17
 ```bash
-curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 17 odoo-main 1017 2017 my_odoo17_instance
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 17 odoo-main 10017 20017 my_odoo17_instance
 ```
 
 ### Deploy Odoo 16
@@ -92,7 +92,7 @@ curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc
 ## Centralized Addons
 To share addons between instances, use the `--addons` flag during deployment:
 ```bash
-curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 18 odoo-main 1018 2018 my_odoo18_instance --addons
+curl -s https://raw.githubusercontent.com/webTronex/odoo-docker-compose/66bd7fcc5305870ac9d4b4873108260342fcc427/run.sh | sudo bash -s 18 odoo-main 10018 20018 my_odoo18_instance --addons
 ```
 
 ## Customization
